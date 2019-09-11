@@ -1,10 +1,4 @@
-#include <iostream>
-#include <string>
-#include <iomanip>
-#include <fstream>
-#include <vector>
-
-using namespace std;
+#include "main.h"
 
 //transition	q	a	r	b	x
 //q = current state
@@ -12,29 +6,6 @@ using namespace std;
 //r = state the machine transitions to
 //b = value the machine writes on top of 'a'
 //x = move back (L) or forward (R) one symbol
-
-enum __StateTypes__
-{
-	NORMAL = 0,
-	START = 1,
-	ACCEPT = 2,
-	REJECT = 3,
-} stateTypes;
-
-struct transition;
-
-struct state
-{
-	int id = -1;
-	__StateTypes__ type = NORMAL;
-	vector<transition*> transitions;
-};
-
-struct transition
-{
-	char symbol;
-	state* nextState = NULL;
-};
 
 int main(int argc, char** argv)
 {
@@ -75,7 +46,6 @@ int main(int argc, char** argv)
 
 	//The input file name is the second argument, after the program name
 	string inputFileName(argv[1]);
-	cout << inputFileName << endl;
 
 	//Open the input file
 	fin.open(inputFileName);
@@ -105,7 +75,7 @@ int main(int argc, char** argv)
 		fin >> input;
 
 		//Set the current state's id number
-		stateList.at(stateList.size())->id = atoi(input.c_str());
+		stateList.at(stateList.size()-1)->id = atoi(input.c_str());
 
 		//Read in the current state's state type
 		fin >> input;
@@ -114,17 +84,17 @@ int main(int argc, char** argv)
 		if (input == "start")
 		{
 			//The current state is a start state
-			stateList.at(stateList.size())->type = START;
+			stateList.at(stateList.size()-1)->type = START;
 		} // !if
 		else if (input == "accept")
 		{
 			//The current state is an accept state
-			stateList.at(stateList.size())->type = ACCEPT;
+			stateList.at(stateList.size()-1)->type = ACCEPT;
 		} // !else if
 		else
 		{
 			//The current state is a reject state
-			stateList.at(stateList.size())->type = REJECT;
+			stateList.at(stateList.size()-1)->type = REJECT;
 		} // !else
 
 		//Read in the next state from the input file
@@ -133,6 +103,7 @@ int main(int argc, char** argv)
 		//Determine whether we have started reading in transitions
 		if (input == "transition")
 		{
+			//We are no longer reating the "state" lines of input
 			readingState = false;
 		} // !if
 		else
@@ -141,7 +112,7 @@ int main(int argc, char** argv)
 			stateList.push_back(new state);
 		} // !else
 	} // !while
-
+	
 	//Get transition data from the input file
 	while (!fin.eof())
 	{
@@ -179,13 +150,11 @@ int main(int argc, char** argv)
 		//For each state in the list of states
 		currentStateFound = false;
 		nextStateFound = false;
-		for (int i = 0;
-			((i < stateList.size())
-			&& !currentStateFound
-			&& !nextStateFound);
+		for (size_t i = 0;
+			((i < stateList.size()) && (!currentStateFound || !nextStateFound));
 			i++)
 		{
-			//Determine whether the current state id matches the current state from
+			//Determine whether the 'current state' id matches the current state from
 			//the list
 			if (currentState == stateList[i]->id)
 			{
@@ -208,14 +177,15 @@ int main(int argc, char** argv)
 			} // !if
 		} // !for
 
-
-
-
-
-		//Determine whether the state was found
+		
+		
+		
+		
+		//Determine whether the transition's originating state was found
 		if (currentStateFound)
 		{
-
+			//Add this transition to the transition list for the originatin state
+			currentStatePtr->transitions.push_back(newTransition);
 		} // !if
 
 
@@ -230,14 +200,14 @@ int main(int argc, char** argv)
 
 	} // !while
 
+	
 
 
 
 
 
 
-
-	system("pause");
+	//system("pause");
 
 
 	fin.close();

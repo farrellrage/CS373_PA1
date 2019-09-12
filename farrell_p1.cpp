@@ -75,7 +75,7 @@ int main(int argc, char** argv)
 		fin >> input;
 
 		//Set the current state's id number
-		stateList.at(stateList.size()-1)->id = atoi(input.c_str());
+		stateList.at(stateList.size() - 1)->id = atoi(input.c_str());
 
 		//Read in the current state's state type
 		fin >> input;
@@ -84,17 +84,17 @@ int main(int argc, char** argv)
 		if (input == "start")
 		{
 			//The current state is a start state
-			stateList.at(stateList.size()-1)->type = START;
+			stateList.at(stateList.size() - 1)->type = START;
 		} // !if
 		else if (input == "accept")
 		{
 			//The current state is an accept state
-			stateList.at(stateList.size()-1)->type = ACCEPT;
+			stateList.at(stateList.size() - 1)->type = ACCEPT;
 		} // !else if
 		else
 		{
 			//The current state is a reject state
-			stateList.at(stateList.size()-1)->type = REJECT;
+			stateList.at(stateList.size() - 1)->type = REJECT;
 		} // !else
 
 		//Read in the next state from the input file
@@ -117,17 +117,17 @@ int main(int argc, char** argv)
 	while (!fin.eof())
 	{
 		//Determine whether the current input line begins with "transition"
-		if (input != "transition")
-		{
-			//Ignore the rest of the input file line
-			fin.ignore(1000, '\n');
+		//if (input != "transition")
+		//{
+		//	//Ignore the rest of the input file line
+		//	fin.ignore(1000, '\n');
 
-			//Get the first value of the next input file line
-			fin >> input;
+		//	//Get the first value of the next input file line
+		//	fin >> input;
 
-			//Continue to the next input file line
-			continue;
-		} // !if
+		//	//Continue to the next input file line
+		//	continue;
+		//} // !if
 
 		//Create a new transition to go between states
 		newTransition = new transition;
@@ -141,21 +141,29 @@ int main(int argc, char** argv)
 		//Get the 'next state' of the transition from the input file
 		fin >> nextState;
 
+		//Get the 'next symbol' of the transition from the input file
+		fin >> nextSymbol;
+
 		//Get the right or left shift value from the input file
 		fin >> shift;
 
+		//cout << input << ' ' << currentState << ' ' << currentSymbol << ' '
+		//	<< nextState << ' ' << nextSymbol << ' ' << shift << endl;
+
 		//Save the symbol for the current transition
 		newTransition->symbol = currentSymbol;
+
+		//Save the shift direction for the current transition
+		if (shift == 'L') { newTransition->shift = LEFT; }
+		else { newTransition->shift = RIGHT; }
 		
 		//For each state in the list of states
+		//Search for a matching state in the state list for the current state
 		currentStateFound = false;
-		nextStateFound = false;
-		for (size_t i = 0;
-			((i < stateList.size()) && (!currentStateFound || !nextStateFound));
-			i++)
+		for (size_t i = 0; ((i < stateList.size()) && !currentStateFound); i++)
 		{
-			//Determine whether the 'current state' id matches the current state from
-			//the list
+			//Determine whether the 'current state' id matches the current
+			//state from the list
 			if (currentState == stateList[i]->id)
 			{
 				//The state already exisits
@@ -164,7 +172,34 @@ int main(int argc, char** argv)
 				//Save a pointer to the current state
 				currentStatePtr = stateList[i];
 			} // !if
+		} // !for
 
+		//Determine whether the transition's originating state was found
+		if (currentStateFound)
+		{
+			//Add this transition to the transition list for the originating state
+			currentStatePtr->transitions.push_back(newTransition);
+		} // !if
+		else
+		{
+			//Create a new generic state to add to the state list
+			stateList.push_back(new state);
+
+			//Set the new generic state's id to the value read from the input file
+			stateList.at(stateList.size() - 1)->id = currentState;
+
+			//Set the new generic state's state type
+			stateList.at(stateList.size() - 1)->type = NORMAL;
+
+			//Add this transition to the transition list for the new state
+			stateList.at(stateList.size() - 1)->transitions.push_back(newTransition);
+		} // !else
+
+		//For each state in the list of states
+		//Search for a matching state in the state list for the next state
+		nextStateFound = false;
+		for (size_t i = 0; ((i < stateList.size()) && !nextStateFound); i++)
+		{
 			//Determine whether the next state id matches the current state from
 			//the list
 			if (nextState == stateList[i]->id)
@@ -177,37 +212,47 @@ int main(int argc, char** argv)
 			} // !if
 		} // !for
 
-		
-		
-		
-		
-		//Determine whether the transition's originating state was found
-		if (currentStateFound)
+		//Determine whether the transition's destination state was found
+		if (nextStatePtr)
 		{
-			//Add this transition to the transition list for the originatin state
-			currentStatePtr->transitions.push_back(newTransition);
+			//Add this transition to the transition list for the
+			//destination state
+			nextStatePtr->transitions.push_back(newTransition);
 		} // !if
+		else
+		{
+			//Create a new generic state to add to the state list
+			stateList.push_back(new state);
 
+			//Set the new generic state's id to the value read from the
+			//input file
+			stateList.at(stateList.size() - 1)->id = nextState;
 
+			//Set the new generic state's state type
+			stateList.at(stateList.size() - 1)->type = NORMAL;
 
+			//Add this transition to the transition list for the new state
+			stateList.at(stateList.size() - 1)->transitions.push_back(newTransition);
+		} // !else
 
-
-
-
-
-
-
+		//Get the next transition from the input file
+		fin >> input;
 
 	} // !while
 
+
+	for (size_t i = 0; i < stateList.size(); i++)
+	{
+		cout << "State " << stateList[i]->id << ", type " << stateList[i]->type << endl;
+
+		for (size_t j = 0; j < stateList[i]->transitions.size(); j++)
+		{
+			cout << "-----" << stateList[i]->transitions[j]->symbol << endl;
+		}
+	}
 	
 
-
-
-
-
-
-	//system("pause");
+	system("pause");
 
 
 	fin.close();

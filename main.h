@@ -16,20 +16,6 @@ using namespace std;
 //b = value the machine writes on top of 'a'
 //x = move back (L) or forward (R) one symbol
 
-enum __StateTypes__
-{
-	NORMAL = 0,
-	START = 1,
-	ACCEPT = 2,
-	REJECT = 3
-} stateTypes; // !__StateTypes__
-
-enum __ShiftDirections__
-{
-	LEFT = 0,
-	RIGHT = 1
-}; // !__ShiftDirections__
-
 struct transition;
 
 struct state
@@ -38,7 +24,7 @@ struct state
 	int id = -1;
 
 	//Used to determine if the input brings the machine to a special state
-	__StateTypes__ type = NORMAL;
+	string type = "normal";
 
 	//List of transitions leading out of this state
 	vector<transition*> transitions;
@@ -47,10 +33,14 @@ struct state
 struct transition
 {
 	//Indicates the required input symbol to follow this transition
-	char symbol;
+	char symbol = '-';
+
+	//Indicates the symbol to overwrite the current input symbol before
+	//following the transition to the next state
+	char overwriteSymbol = '-';
 
 	//Indicates the input symbol to shift to after following this transition
-	__ShiftDirections__ shift;
+	char shift = '-';
 
 	//Points to the state at the end of this transition
 	state* nextState = NULL;
